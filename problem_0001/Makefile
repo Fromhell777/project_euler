@@ -9,13 +9,11 @@ SOURCES := $(shell find . -maxdepth 1 -name "*.cpp")
 INCDIRS := -I ../include
 
 CXX := g++
-CXXFLAGS := -g -std=c++23 -Wall -Wextra -Werror -pedantic -O3 $(INCDIRS)
-EXTRA_LINK_FLAGS := -fopenmp -lgmpxx -lgmp
+CXXFLAGS := -g -std=c++23 -Wall -Wextra -Werror -pedantic -O3 $(INCDIRS) -fopenmp
+EXTRA_LINK_FLAGS := -lgmpxx -lgmp
 
 OBJECTS_WRONG_DIR := $(foreach source, $(SOURCES), $(basename $(source)).o)
 OBJECTS := $(addprefix $(OBJDIR)/, $(notdir $(OBJECTS_WRONG_DIR)))
-DEPS_WRONG_DIR := $(OBJECTS_WRONG_DIR:.o=.d)
-DEPENDENCIES := $(addprefix $(DEPDIR)/, $(notdir $(DEPS_WRONG_DIR)))
 
 define mkdir_target
 test -d $(@D) \
@@ -29,7 +27,7 @@ all: $(APPNAME)
 
 $(APPNAME): $(OBJECTS)
 	$(mkdir_target)
-	$(CXX) $(CXXFLAGS) $(EXTRA_LINK_FLAGS) -o $(APPNAME) $(OBJECTS)
+	$(CXX) -o $(APPNAME) $(OBJECTS) $(EXTRA_LINK_FLAGS)
 
 $(OBJDIR)/%.o : %.cpp
 	$(mkdir_target)
