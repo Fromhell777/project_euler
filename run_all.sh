@@ -52,7 +52,8 @@ if [[ $DO_MAKE = 1 ]]; then
   echo "###########################"
   for problem in $problems;
   do
-    echo "Problem ${problem##*_}:"
+    echo ""
+    echo "Making problem ${problem##*_}:"
     (cd $problem && make)
   done
 fi
@@ -77,6 +78,8 @@ if [[ $DO_CLEAN = 1 ]]; then
   echo "#############################"
   for problem in $problems;
   do
+    echo ""
+    echo "Cleaning problem ${problem##*_}:"
     (cd $problem && make clean)
   done
 fi
