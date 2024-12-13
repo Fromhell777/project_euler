@@ -55,7 +55,7 @@ long poker_hand_evaluator(std::string filename) {
   return victories;
 }
 
-int main () {
+int main() {
 
   std::string filename = "poker.txt";
   long result;

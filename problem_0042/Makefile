@@ -2,41 +2,51 @@ ifndef VERBOSE
 .SILENT:
 endif
 
-APPNAME := program
-OBJDIR  := objects
-DEPDIR  := objects
-SOURCES := $(shell find . -maxdepth 1 -name "*.cpp")
-INCDIRS := -I ../include
+APPNAME  := program
+SOURCES  := $(shell find . -maxdepth 1 -name "*.cpp")
+OBJDIR   := objects
+DEPFLAGS  = -MT $@ -MMD -MP -MF $(OBJDIR)/$*.d
+DEPFILES := $(SOURCES:%.cpp=$(OBJDIR)/%.d)
+OBJFILES := $(DEPFILES:%.d=%.o)
+INCDIRS  := -I ../include
 
 CXX := g++
 CXXFLAGS := -g -std=c++23 -Wall -Wextra -Werror -pedantic -O3 $(INCDIRS) -fopenmp
 EXTRA_LINK_FLAGS := -lgmpxx -lgmp
 
-OBJECTS_WRONG_DIR := $(foreach source, $(SOURCES), $(basename $(source)).o)
-OBJECTS := $(addprefix $(OBJDIR)/, $(notdir $(OBJECTS_WRONG_DIR)))
-
-define mkdir_target
+define mkdir_for_target
 test -d $(@D) \
   || ( echo "Creating directory $(@D)" && mkdir -p $(@D) ) \
   || echo Unable to create $(@D);
+endef
+
+define mkdir_target
+test -d $@ \
+  || ( echo "Creating directory $@" && mkdir -p $@ ) \
+  || echo Unable to create $@;
 endef
 
 .PHONY: all clean
 
 all: $(APPNAME)
 
-$(APPNAME): $(OBJECTS)
-	$(mkdir_target)
-	$(CXX) -o $(APPNAME) $(OBJECTS) $(EXTRA_LINK_FLAGS)
+$(APPNAME) : $(OBJFILES)
+	$(mkdir_for_target)
+	$(CXX) -o $(APPNAME) $(OBJFILES) $(EXTRA_LINK_FLAGS)
 
-$(OBJDIR)/%.o : %.cpp
-	$(mkdir_target)
+$(OBJDIR)/%.o : %.cpp $(OBJDIR)/%.d | $(OBJDIR)
 	@echo Compiling $<
-	$(CXX) -c -o $@ $< $(CXXFLAGS)
+	$(CXX) $(CXXFLAGS) $(DEPFLAGS) -o $@ -c $<
 
-clean:
-	@echo Removing objects
-	rm -f $(OBJECTS) > /dev/null 2>&1
+$(OBJDIR) :
+	$(mkdir_target)
+
+$(DEPFILES) :
+
+include $(wildcard $(DEPFILES))
+
+clean :
+	@echo Removing objects and dependency files
 	rm -rf $(OBJDIR) > /dev/null 2>&1
 	@echo Removing executable
 	rm -f $(APPNAME) > /dev/null 2>&1
